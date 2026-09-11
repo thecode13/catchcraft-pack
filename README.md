@@ -41,15 +41,24 @@ Tamanho total do zip: ~21 KB. Isso é o download inteiro do jogador.
 
 ## Instalar no servidor
 
-1. Suba o `CatchCraftPack.zip` para uma URL pública estável (Vercel ou GitHub
-   Releases — os dois de graça).
+1. Publique o zip numa Release deste repo (ele é público, então o download
+   funciona sem autenticação — que é o que o cliente do Minecraft precisa):
+
+```bash
+gh release create v1.0.1 CatchCraftPack.zip --title "v1.0.1" --notes "..."
+```
+
 2. No `server.properties`:
 
 ```
-resource-pack=https://SEU-HOST/CatchCraftPack.zip
-resource-pack-sha1=<o sha1 impresso pelo gerador>
+resource-pack=https://github.com/thecode13/catchcraft-pack/releases/download/v1.0.0/CatchCraftPack.zip
+resource-pack-sha1=218d01187b56806b08359504ad7a8971da578b3e
 require-resource-pack=true
 ```
+
+A URL aponta para uma **tag fixa**, de propósito: assim um pack novo não troca
+o conteúdo debaixo de quem já baixou. Ao publicar uma versão nova, crie uma tag
+nova e atualize URL **e** SHA-1 juntos.
 
 3. Só então ligue `resource-pack.trophy-models: true` no `config.yml` do plugin.
 
