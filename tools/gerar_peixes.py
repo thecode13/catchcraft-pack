@@ -954,7 +954,9 @@ def catalogo_peixes():
     """(nome, imagem, rotulo) de cada especie + cada boss."""
     itens = []
     for cardume in T.CARDUMES:
-        pal = T.PALETAS[f"peixedex-{cardume}"]
+        # "default" usa uma paleta so' dos peixes (prata-azulado), separada da
+        # do trofeu de Peixedex (que continua cinza) - ver T.PALETA_PEIXE_DEFAULT.
+        pal = T.PALETA_PEIXE_DEFAULT if cardume == "default" else T.PALETAS[f"peixedex-{cardume}"]
         for especie in ESPECIES[cardume]:
             itens.append((f"peixe_{especie}",
                           pinta_peixe(pal, variacao(especie), especie),

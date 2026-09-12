@@ -61,6 +61,13 @@ PALETAS = {
     "peixedex-jungle": paleta("#08260c", "#17601c", "#2ba332", "#63e06a"),
 }
 
+# Paleta so' dos PEIXES (nao do trofeu) do cardume "default": o cinza chapado
+# de peixedex-default lia bem como livro de Peixedex, mas ficava sem graca
+# como escama de peixe de verdade. Prata-azulado e' cor real de escama
+# (sardinha/salmao/robalo), mais vivo que cinza sem perder o ar "neutro" do
+# grupo que nao caiu em nenhum bioma especifico.
+PALETA_PEIXE_DEFAULT = paleta("#101820", "#25455e", "#4f89a8", "#a9d8e6")
+
 OURO = paleta("#3d2a06", "#8a6413", "#d8a52a", "#ffe07a")
 PAPEL = "#efe6cf"  # corte das paginas do tomo
 
@@ -414,7 +421,7 @@ def folha_texturas(itens):
     sheet.save(os.path.join(PREVIEW_DIR, "texturas.png"))
 
 
-def comandos_give(itens, peixes=()):
+def comandos_give(itens, peixes=(), tickets=()):
     linhas = ["# Cole no chat pra ver cada peca. Nao precisa do plugin nem da flag.",
               "", "# --- trofeus ---"]
     for nome, _, _, _ in itens:
@@ -422,6 +429,10 @@ def comandos_give(itens, peixes=()):
     if peixes:
         linhas += ["", "# --- peixes (1 por especie + 1 por boss) ---"]
         for nome, _, _ in peixes:
+            linhas.append(f'/give @s minecraft:paper[minecraft:item_model="{NS}:{nome}"]')
+    if tickets:
+        linhas += ["", "# --- ticket de recompensa (NAME_TAG no jogo, aqui via paper) ---"]
+        for nome, _, _ in tickets:
             linhas.append(f'/give @s minecraft:paper[minecraft:item_model="{NS}:{nome}"]')
     with open(os.path.join(PREVIEW_DIR, "comandos_give.txt"), "w", encoding="utf-8") as f:
         f.write("\n".join(linhas) + "\n")
@@ -437,9 +448,10 @@ def empacota():
 
 
 def main():
-    # Import tardio de proposito: gerar_peixes importa ESTE modulo (pelas
-    # PALETAS), entao importar la' em cima fecharia um ciclo.
+    # Import tardio de proposito: gerar_peixes e gerar_ticket importam ESTE
+    # modulo (pelas PALETAS/OURO), entao importar la' em cima fecharia um ciclo.
     import gerar_peixes
+    import gerar_ticket
 
     for d in (TEX_DIR, MODEL_DIR, ITEM_DIR, PREVIEW_DIR):
         os.makedirs(d, exist_ok=True)
@@ -467,12 +479,16 @@ def main():
     peixes = gerar_peixes.catalogo_peixes()
     gerar_peixes.gera(peixes)
 
+    tickets = gerar_ticket.catalogo_ticket()
+    gerar_ticket.gera(tickets)
+
     folha_iso(itens)
     folha_texturas(itens)
-    comandos_give(itens, peixes)
+    comandos_give(itens, peixes, tickets)
     zipe = empacota()
     print(f"{len(itens)} trofeus 3D gerados em {MODEL_DIR}")
     print(f"{len(peixes)} peixes 2D gerados em {MODEL_DIR}")
+    print(f"{len(tickets)} ticket(s) gerado(s) em {MODEL_DIR}")
     print(f"zip: {zipe}")
 
 

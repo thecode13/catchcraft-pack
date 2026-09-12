@@ -83,7 +83,7 @@ tingido pela paleta de cada peça. O gerador **não** depende de
 Chaves: `peixe_<id-da-especie>` (ex.: `peixe_sardinha`, `peixe_kraken`) — a
 lista completa está em `preview/comandos_give.txt`.
 
-## O que tem no pack (65 peças)
+## O que tem no pack (66 peças)
 
 - **6 troféus de boss** — taça na cor do boss, com emblema próprio.
 - **6 troféus "Primeiro Domador"** — mesma taça em ouro, com coroa; o emblema
@@ -91,6 +91,11 @@ lista completa está em `preview/comandos_give.txt`.
 - **6 troféus de Peixedex completo** — silhueta de livro, uma cor por cardume.
 - **47 peixes** — 41 espécies + 6 bosses, cada um com forma e padrão próprios
   (ver seção acima).
+- **1 ticket de recompensa** — item plano gerado por `tools/gerar_ticket.py`,
+  chave `ticket_recompensa`, paleta `OURO` (mesma dos troféus "Primeiro
+  Domador"). É genérico: representa o "vale +N níveis de XP" entregue tanto em
+  captura de peixe-boss quanto em level-up (`RewardTicket.java`), não varia por
+  boss nem por nível.
 
 Tamanho total do zip varia a cada geração (~70-90 KB) — isso é o download
 inteiro do jogador.
@@ -167,7 +172,9 @@ meta.setItemModel(new NamespacedKey("catchcraft", "trofeu_" + boss.id()));
 ```
 
 Chaves disponíveis: `trofeu_<boss>`, `trofeu_ouro_<boss>`,
-`trofeu_peixedex_<cardume>`, `peixe_<id-da-especie>`.
+`trofeu_peixedex_<cardume>`, `peixe_<id-da-especie>`, `ticket_recompensa`
+(única, sem variação — aplicada em `RewardTicket.java` via `TicketModels`,
+flag própria `resource-pack.ticket-model`).
 
-Pra conferir a arte sem o plugin, use `preview/comandos_give.txt` (65
+Pra conferir a arte sem o plugin, use `preview/comandos_give.txt` (66
 comandos, um por peça) ou olhe `preview/peixes.png` / `preview/iso.png`.

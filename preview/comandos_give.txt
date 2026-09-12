@@ -68,3 +68,6 @@
 /give @s minecraft:paper[minecraft:item_model="catchcraft:peixe_leviata"]
 /give @s minecraft:paper[minecraft:item_model="catchcraft:peixe_cobra-grande"]
 /give @s minecraft:paper[minecraft:item_model="catchcraft:peixe_serpente-abissal"]
+
+# --- ticket de recompensa (NAME_TAG no jogo, aqui via paper) ---
+/give @s minecraft:paper[minecraft:item_model="catchcraft:ticket_recompensa"]
