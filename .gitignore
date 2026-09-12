@@ -1,2 +1,10 @@
 # O zip e' artefato de build: ele vive nas Releases, nao no historico do repo.
 CatchCraftPack.zip
+
+# gerar_trofeus importa gerar_peixes -> aparece cache de bytecode
+tools/__pycache__/
+
+# Scratch da geracao por IA: PNGs grandes e logs de experimento. O padrao de
+# escama que interessava ja' esta congelado em ASCII dentro de gerar_peixes.py.
+tools/ai_output/
+tools/ai_run*.log

@@ -110,23 +110,48 @@ def rgb(hex_str):
     return (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16), 255)
 
 
+def mistura(cor_a, cor_b, t):
+    """Interpola duas cores da paleta. t=0 -> cor_a, t=1 -> cor_b."""
+    a, b = rgb(cor_a), rgb(cor_b)
+    return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3)) + (255,)
+
+
+# Perfil de reflexo do metal, coluna a coluna (x=1..14) dentro do tile.
+# (para, t): a cor e' a interpolacao entre 'de' e 'para' na fracao t, andando
+# L -> M -> D. Antes eram 3 bandas chapadas (L/M/D) e a taca parecia recortada
+# em papel colorido; com 14 degraus ela le' como metal curvo de verdade.
+# O "repique" em x=11 e' o segundo brilho: a luz que volta da borda direita.
+PERFIL_METAL = [
+    ("L", "s", 0.45),   # x=1  quina iluminada
+    ("L", "s", 0.85),   # x=2  risco especular principal
+    ("L", "s", 0.30),
+    ("L", "M", 0.15),
+    ("L", "M", 0.45),
+    ("L", "M", 0.75),
+    ("M", "M", 0.00),   # x=7  barriga do cilindro
+    ("M", "D", 0.20),
+    ("M", "D", 0.50),
+    ("M", "D", 0.80),
+    ("D", "M", 0.35),   # x=11 segundo brilho (luz refletida da borda)
+    ("D", "D", 0.00),
+    ("D", "o", 0.35),   # x=13 sombra de contato antes do contorno
+    ("D", "o", 0.65),
+]
+
+
 def pinta_atlas(pal, pal_emblema, glifo, papel=None):
     """Monta a textura 32x32 com os quatro tiles do trofeu."""
     img = Image.new("RGBA", (ATLAS, ATLAS), (0, 0, 0, 0))
     px = img.load()
 
-    # metal: claro na esquerda, escuro na direita, contorno nas bordas
+    # metal: gradiente de 14 degraus da esquerda (luz) pra direita (sombra)
     for y in range(16):
         for x in range(16):
             if x <= 0 or x >= 15:
-                cor = pal["o"]
-            elif x <= 3:
-                cor = pal["L"]
-            elif x <= 10:
-                cor = pal["M"]
+                px[x, y] = rgb(pal["o"])
             else:
-                cor = pal["D"]
-            px[x, y] = rgb(cor)
+                de, para, t = PERFIL_METAL[x - 1]
+                px[x, y] = mistura(pal[de], pal[para], t)
     for y in range(2, 14):  # risco de brilho: da leitura de metal polido
         px[2, y] = rgb(pal["s"])
 
@@ -142,19 +167,49 @@ def pinta_atlas(pal, pal_emblema, glifo, papel=None):
             borda = x in (0, 15) or y in (0, 15)
             px[x + 16, y + 16] = rgb(pal["o"] if borda else pal["D"])
 
-    # emblema: medalhao escuro + simbolo sobre fundo de metal
+    # emblema: fundo de metal (mesmo gradiente da lateral, pra casar as faces)
     for y in range(16):
         for x in range(16):
-            px[x + 16, y] = rgb(pal["M"] if 1 <= x <= 14 else pal["o"])
+            if x <= 0 or x >= 15:
+                px[x + 16, y] = rgb(pal["o"])
+            else:
+                de, para, t = PERFIL_METAL[x - 1]
+                px[x + 16, y] = mistura(pal[de], pal[para], t)
+
+    # medalhao escondado: fundo escuro + bisel. A borda de cima/esquerda fica
+    # mais escura que o fundo e a de baixo/direita mais clara - e' o que da' a
+    # impressao de que o simbolo esta REBAIXADO no metal, e nao colado nele.
     for y in range(2, 14):
         for x in range(18, 30):
             px[x, y] = rgb(pal["D"])
+    sombra = mistura(pal["D"], pal["o"], 0.6)
+    luz = mistura(pal["D"], pal["L"], 0.35)
+    for x in range(19, 29):
+        px[x, 3] = sombra
+        px[x, 12] = luz
+    for y in range(3, 13):
+        px[19, y] = sombra
+        px[28, y] = luz
+    px[19, 12] = rgb(pal["D"])
+    px[28, 3] = rgb(pal["D"])
     for x in range(18, 30):
         px[x, 2] = rgb(pal["o"])
         px[x, 13] = rgb(pal["o"])
     for y in range(2, 14):
         px[18, y] = rgb(pal["o"])
         px[29, y] = rgb(pal["o"])
+
+    # sombra projetada do glifo: 1px pra baixo/direita, so' onde ainda e' fundo.
+    sombra_glifo = mistura(pal["D"], pal["o"], 0.85)
+    for dy, linha in enumerate(glifo):
+        for dx, ch in enumerate(linha):
+            if ch == ".":
+                continue
+            sx, sy = 21 + dx, 5 + dy
+            gx, gy = sx - 20, sy - 4
+            dentro_glifo = 0 <= gx < 8 and 0 <= gy < 8 and glifo[gy][gx] != "."
+            if not dentro_glifo:
+                px[sx, sy] = sombra_glifo
     cores = {"g": pal_emblema["L"], "G": pal_emblema["M"], "o": pal_emblema["o"]}
     for dy, linha in enumerate(glifo):
         for dx, ch in enumerate(linha):
@@ -342,10 +397,32 @@ def folha_iso(itens):
     sheet.save(os.path.join(PREVIEW_DIR, "iso.png"))
 
 
-def comandos_give(itens):
-    linhas = ["# Cole no chat pra ver cada trofeu. Nao precisa do plugin nem da flag.", ""]
+def folha_texturas(itens):
+    """Os atlas 32x32 ampliados. A folha iso achata cada face numa cor media,
+    entao o acabamento do metal (gradiente, 2o brilho, bisel do medalhao) so'
+    se confere aqui."""
+    cols, cel, zoom = 6, 210, 6
+    linhas = (len(itens) + cols - 1) // cols
+    sheet = Image.new("RGBA", (cel * cols, (cel + 18) * linhas), (30, 32, 38, 255))
+    draw = ImageDraw.Draw(sheet)
+    fonte = ImageFont.load_default()
+    for i, (nome, img, _, rotulo) in enumerate(itens):
+        cx, cy = (i % cols) * cel, (i // cols) * (cel + 18)
+        grande = img.resize((ATLAS * zoom, ATLAS * zoom), Image.NEAREST)
+        sheet.alpha_composite(grande, (cx + (cel - ATLAS * zoom) // 2, cy + 6))
+        draw.text((cx + 8, cy + cel + 2), rotulo, font=fonte, fill=(225, 227, 233, 255))
+    sheet.save(os.path.join(PREVIEW_DIR, "texturas.png"))
+
+
+def comandos_give(itens, peixes=()):
+    linhas = ["# Cole no chat pra ver cada peca. Nao precisa do plugin nem da flag.",
+              "", "# --- trofeus ---"]
     for nome, _, _, _ in itens:
         linhas.append(f'/give @s minecraft:paper[minecraft:item_model="{NS}:{nome}"]')
+    if peixes:
+        linhas += ["", "# --- peixes (1 por especie + 1 por boss) ---"]
+        for nome, _, _ in peixes:
+            linhas.append(f'/give @s minecraft:paper[minecraft:item_model="{NS}:{nome}"]')
     with open(os.path.join(PREVIEW_DIR, "comandos_give.txt"), "w", encoding="utf-8") as f:
         f.write("\n".join(linhas) + "\n")
 
@@ -360,6 +437,10 @@ def empacota():
 
 
 def main():
+    # Import tardio de proposito: gerar_peixes importa ESTE modulo (pelas
+    # PALETAS), entao importar la' em cima fecharia um ciclo.
+    import gerar_peixes
+
     for d in (TEX_DIR, MODEL_DIR, ITEM_DIR, PREVIEW_DIR):
         os.makedirs(d, exist_ok=True)
     for glifo in EMBLEMAS.values():
@@ -375,17 +456,23 @@ def main():
 
     escreve_json(os.path.join(PACK, "pack.mcmeta"), {
         "pack": {
-            "description": "CatchCraft - trofeus",
+            "description": "CatchCraft - trofeus e peixes",
             "pack_format": PACK_FORMAT,
             "min_format": PACK_FORMAT,
             "max_format": PACK_FORMAT,
         }
     })
 
+    gerar_peixes.valida()
+    peixes = gerar_peixes.catalogo_peixes()
+    gerar_peixes.gera(peixes)
+
     folha_iso(itens)
-    comandos_give(itens)
+    folha_texturas(itens)
+    comandos_give(itens, peixes)
     zipe = empacota()
     print(f"{len(itens)} trofeus 3D gerados em {MODEL_DIR}")
+    print(f"{len(peixes)} peixes 2D gerados em {MODEL_DIR}")
     print(f"zip: {zipe}")
 
 
