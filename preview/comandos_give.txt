@@ -71,3 +71,10 @@
 
 # --- ticket de recompensa (NAME_TAG no jogo, aqui via paper) ---
 /give @s minecraft:paper[minecraft:item_model="catchcraft:ticket_recompensa"]
+
+# --- varas de marco (FISHING_ROD no jogo, aqui via paper) ---
+/give @s minecraft:paper[minecraft:item_model="catchcraft:vara_aprendiz"]
+/give @s minecraft:paper[minecraft:item_model="catchcraft:vara_veterana"]
+/give @s minecraft:paper[minecraft:item_model="catchcraft:vara_experiente"]
+/give @s minecraft:paper[minecraft:item_model="catchcraft:vara_mestra"]
+/give @s minecraft:paper[minecraft:item_model="catchcraft:vara_especialista"]

@@ -421,7 +421,7 @@ def folha_texturas(itens):
     sheet.save(os.path.join(PREVIEW_DIR, "texturas.png"))
 
 
-def comandos_give(itens, peixes=(), tickets=()):
+def comandos_give(itens, peixes=(), tickets=(), varas=()):
     linhas = ["# Cole no chat pra ver cada peca. Nao precisa do plugin nem da flag.",
               "", "# --- trofeus ---"]
     for nome, _, _, _ in itens:
@@ -433,6 +433,10 @@ def comandos_give(itens, peixes=(), tickets=()):
     if tickets:
         linhas += ["", "# --- ticket de recompensa (NAME_TAG no jogo, aqui via paper) ---"]
         for nome, _, _ in tickets:
+            linhas.append(f'/give @s minecraft:paper[minecraft:item_model="{NS}:{nome}"]')
+    if varas:
+        linhas += ["", "# --- varas de marco (FISHING_ROD no jogo, aqui via paper) ---"]
+        for nome, _, _ in varas:
             linhas.append(f'/give @s minecraft:paper[minecraft:item_model="{NS}:{nome}"]')
     with open(os.path.join(PREVIEW_DIR, "comandos_give.txt"), "w", encoding="utf-8") as f:
         f.write("\n".join(linhas) + "\n")
@@ -452,6 +456,7 @@ def main():
     # modulo (pelas PALETAS/OURO), entao importar la' em cima fecharia um ciclo.
     import gerar_peixes
     import gerar_ticket
+    import gerar_varas
 
     for d in (TEX_DIR, MODEL_DIR, ITEM_DIR, PREVIEW_DIR):
         os.makedirs(d, exist_ok=True)
@@ -482,13 +487,17 @@ def main():
     tickets = gerar_ticket.catalogo_ticket()
     gerar_ticket.gera(tickets)
 
+    varas = gerar_varas.catalogo_varas()
+    gerar_varas.gera(varas)
+
     folha_iso(itens)
     folha_texturas(itens)
-    comandos_give(itens, peixes, tickets)
+    comandos_give(itens, peixes, tickets, varas)
     zipe = empacota()
     print(f"{len(itens)} trofeus 3D gerados em {MODEL_DIR}")
     print(f"{len(peixes)} peixes 2D gerados em {MODEL_DIR}")
     print(f"{len(tickets)} ticket(s) gerado(s) em {MODEL_DIR}")
+    print(f"{len(varas)} vara(s) gerada(s) em {MODEL_DIR}")
     print(f"zip: {zipe}")
 
 
