@@ -457,6 +457,7 @@ def main():
     import gerar_peixes
     import gerar_ticket
     import gerar_varas
+    import gerar_bolsa
 
     for d in (TEX_DIR, MODEL_DIR, ITEM_DIR, PREVIEW_DIR):
         os.makedirs(d, exist_ok=True)
@@ -490,6 +491,9 @@ def main():
     varas = gerar_varas.catalogo_varas()
     gerar_varas.gera(varas)
 
+    bolsa = gerar_bolsa.catalogo_bolsa()
+    gerar_bolsa.gera(bolsa)
+
     folha_iso(itens)
     folha_texturas(itens)
     comandos_give(itens, peixes, tickets, varas)
@@ -498,6 +502,7 @@ def main():
     print(f"{len(peixes)} peixes 2D gerados em {MODEL_DIR}")
     print(f"{len(tickets)} ticket(s) gerado(s) em {MODEL_DIR}")
     print(f"{len(varas)} vara(s) gerada(s) em {MODEL_DIR}")
+    print(f"{len(bolsa)} bolsa(s) gerada(s) em {MODEL_DIR}")
     print(f"zip: {zipe}")
 
 

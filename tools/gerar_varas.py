@@ -4,9 +4,12 @@ Gerador das texturas das 5 VARAS DE MARCO do CatchCraft (niveis 5/10/20/30/40:
 Aprendiz/Veterana/Experiente/Mestra/Especialista - ver LevelRewardService.java
 e CatchCraftCommand.java no plugin).
 
-Item PLANO (minecraft:item/generated), igual peixes e ticket: e' segurado e
-visto no inventario/hotbar, nunca cai no chao com volume proprio (a vara em si
-ja e' vanilla FISHING_ROD - so' a textura muda).
+Item PLANO (minecraft:item/handheld_rod - mesmo parent da vara de pesca
+vanilla, NAO minecraft:item/generated que e' usado por peixes/ticket): e'
+segurado e visto no inventario/hotbar, nunca cai no chao com volume proprio
+(a vara em si ja e' vanilla FISHING_ROD - so' a textura muda). O parent
+handheld_rod da' o perfil fino correto na mao (generated fica largo/chapado,
+como se fosse espada) e a animacao de "arco" ao lancar o anzol, igual vanilla.
 
 RESOLUCAO: 32x32, mesma dos peixes/ticket - a vara e' um sprite diagonal fino
 (cabo + vareta + linha), 16x16 nao daria espaco pra progressao de detalhe
@@ -181,7 +184,7 @@ def gera(itens):
     for nome, img, _ in itens:
         img.save(os.path.join(T.TEX_DIR, nome + ".png"))
         T.escreve_json(os.path.join(T.MODEL_DIR, nome + ".json"), {
-            "parent": "minecraft:item/generated",
+            "parent": "minecraft:item/handheld_rod",
             "textures": {"layer0": f"{T.NS}:item/{nome}"},
         })
         T.escreve_json(os.path.join(T.ITEM_DIR, nome + ".json"), {
